@@ -64,34 +64,49 @@ Total: ~200ms para 100 comandos (em vez de 20 segundos!)
 ### Requisitos
 
 - Linux (64-bit)
-- TeamSpeak 3 Server ou TeaSpeak
-- Porta livre (padrão: 10012)
+- TeamSpeak 3 Server (porta 10011) ou TeaSpeak (porta 10101)
+- Git instalado
 
-### Download e Instalação
+### Instalação Automática (Recomendado)
+
+O script de instalação faz tudo automaticamente:
+- Compila o binário (se Go estiver instalado) ou baixa pré-compilado
+- Detecta TeamSpeak ou TeaSpeak
+- Permite configurar porta personalizada do ServerQuery
+- Cria e inicia o serviço systemd
 
 ```bash
-# Baixar binário pré-compilado
-wget https://raw.githubusercontent.com/correia3d/batqa-proxy/main/batqa-proxy-linux-amd64
-chmod +x batqa-proxy-linux-amd64
-sudo mv batqa-proxy-linux-amd64 /usr/local/bin/batqa-proxy
-
-# Ou compilar do fonte (requer Go 1.21+)
 git clone https://github.com/correia3d/batqa-proxy.git
 cd batqa-proxy
-go build -o batqa-proxy main.go
+sudo ./install.sh
 ```
 
-### Execução Manual
+O instalador vai perguntar:
+- **Porta do proxy**: onde o BATQA vai conectar (padrão: 10202 para TS, 10203 para TeaSpeak)
+- **Porta do ServerQuery**: porta do seu servidor (padrão: 10011 para TS, 10101 para TeaSpeak)
+
+> 💡 Se seu TeamSpeak usa uma porta personalizada, basta informar durante a instalação!
+
+### Portas Padrão
+
+| Servidor | Porta ServerQuery | Porta Proxy |
+|----------|-------------------|-------------|
+| TeamSpeak 3 | 10011 | 10202 |
+| TeaSpeak | 10101 | 10203 |
+
+### Execução Manual (Opcional)
+
+Se preferir rodar manualmente sem systemd:
 
 ```bash
-# Básico
-./batqa-proxy
-
-# Com opções
+# TeamSpeak (padrão)
 ./batqa-proxy -listen :10202 -target localhost:10011
 
-# TeaSpeak (porta diferente)
+# TeaSpeak
 ./batqa-proxy -listen :10203 -target localhost:10101
+
+# Porta personalizada do TeamSpeak (ex: 10022)
+./batqa-proxy -listen :10202 -target localhost:10022
 ```
 
 ### Parâmetros
@@ -105,34 +120,28 @@ go build -o batqa-proxy main.go
 | `-rate-limit` | `100` | Máximo de comandos por segundo por IP |
 | `-log` | `info` | Nível de log (debug, info, warn, error) |
 
-### Instalação como Serviço (systemd)
+### Gerenciamento do Serviço
+
+O `install.sh` cria o serviço automaticamente. Comandos úteis:
 
 ```bash
-# Criar arquivo de serviço
-sudo tee /etc/systemd/system/batqa-proxy.service << 'EOF'
-[Unit]
-Description=BATQA Proxy for TeamSpeak ServerQuery
-After=network.target teamspeak3-server.service
-
-[Service]
-Type=simple
-User=teamspeak
-Group=teamspeak
-ExecStart=/usr/local/bin/batqa-proxy -listen :10202 -target localhost:10011
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-# Ativar e iniciar
-sudo systemctl daemon-reload
-sudo systemctl enable batqa-proxy
-sudo systemctl start batqa-proxy
-
-# Verificar status
+# Ver status
 sudo systemctl status batqa-proxy
+
+# Ver logs
+sudo journalctl -u batqa-proxy -f
+
+# Reiniciar
+sudo systemctl restart batqa-proxy
+
+# Parar
+sudo systemctl stop batqa-proxy
+
+# Desinstalar
+sudo systemctl stop batqa-proxy
+sudo systemctl disable batqa-proxy
+sudo rm /etc/systemd/system/batqa-proxy.service
+sudo rm /usr/local/bin/batqa-proxy
 ```
 
 ### Firewall
