@@ -117,7 +117,9 @@ Se preferir rodar manualmente sem systemd:
 | `-target` | `localhost:10011` | Endereço do ServerQuery |
 | `-max-conns` | `100` | Máximo de conexões simultâneas |
 | `-timeout` | `30s` | Timeout de conexão |
-| `-rate-limit` | `100` | Máximo de comandos por segundo por IP |
+| `-log` | `info` | Nível de log (debug, info, warn, error) |
+
+> ⚡ **Rate limit: Unlimited** - O proxy não limita comandos por segundo.
 | `-log` | `info` | Nível de log (debug, info, warn, error) |
 
 ### Gerenciamento do Serviço

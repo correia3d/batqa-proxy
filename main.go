@@ -31,7 +31,6 @@ type Config struct {
 	TargetAddr    string
 	MaxConns      int
 	Timeout       time.Duration
-	RateLimit     int
 	LogLevel      string
 }
 
@@ -44,76 +43,10 @@ type Stats struct {
 	StartTime          time.Time
 }
 
-// Rate limiter por IP
-type RateLimiter struct {
-	mu       sync.Mutex
-	requests map[string][]time.Time
-	limit    int
-	window   time.Duration
-}
-
-func NewRateLimiter(limit int, window time.Duration) *RateLimiter {
-	rl := &RateLimiter{
-		requests: make(map[string][]time.Time),
-		limit:    limit,
-		window:   window,
-	}
-	// Limpa entradas antigas periodicamente
-	go rl.cleanup()
-	return rl
-}
-
-func (rl *RateLimiter) Allow(ip string) bool {
-	rl.mu.Lock()
-	defer rl.mu.Unlock()
-
-	now := time.Now()
-	cutoff := now.Add(-rl.window)
-
-	// Filtra requests dentro da janela
-	var valid []time.Time
-	for _, t := range rl.requests[ip] {
-		if t.After(cutoff) {
-			valid = append(valid, t)
-		}
-	}
-
-	if len(valid) >= rl.limit {
-		return false
-	}
-
-	rl.requests[ip] = append(valid, now)
-	return true
-}
-
-func (rl *RateLimiter) cleanup() {
-	ticker := time.NewTicker(time.Minute)
-	for range ticker.C {
-		rl.mu.Lock()
-		now := time.Now()
-		cutoff := now.Add(-rl.window)
-		for ip, times := range rl.requests {
-			var valid []time.Time
-			for _, t := range times {
-				if t.After(cutoff) {
-					valid = append(valid, t)
-				}
-			}
-			if len(valid) == 0 {
-				delete(rl.requests, ip)
-			} else {
-				rl.requests[ip] = valid
-			}
-		}
-		rl.mu.Unlock()
-	}
-}
-
 // Proxy principal
 type Proxy struct {
 	config      Config
 	stats       Stats
-	rateLimiter *RateLimiter
 	listener    net.Listener
 	shutdown    chan struct{}
 	wg          sync.WaitGroup
@@ -123,7 +56,6 @@ func NewProxy(config Config) *Proxy {
 	return &Proxy{
 		config:      config,
 		stats:       Stats{StartTime: time.Now()},
-		rateLimiter: NewRateLimiter(config.RateLimit, time.Second),
 		shutdown:    make(chan struct{}),
 	}
 }
@@ -139,7 +71,7 @@ func (p *Proxy) Start() error {
 	log.Printf("   Escutando em: %s", p.config.ListenAddr)
 	log.Printf("   Destino: %s", p.config.TargetAddr)
 	log.Printf("   Max conexões: %d", p.config.MaxConns)
-	log.Printf("   Rate limit: %d/seg por IP", p.config.RateLimit)
+	log.Printf("   Rate limit: unlimited")
 
 	for {
 		conn, err := listener.Accept()
@@ -156,14 +88,6 @@ func (p *Proxy) Start() error {
 		// Verifica limite de conexões
 		if atomic.LoadInt64(&p.stats.ActiveConnections) >= int64(p.config.MaxConns) {
 			log.Printf("⚠️  Limite de conexões atingido, rejeitando: %s", conn.RemoteAddr())
-			conn.Close()
-			continue
-		}
-
-		// Verifica rate limit
-		ip, _, _ := net.SplitHostPort(conn.RemoteAddr().String())
-		if !p.rateLimiter.Allow(ip) {
-			log.Printf("⚠️  Rate limit excedido para IP: %s", ip)
 			conn.Close()
 			continue
 		}
@@ -295,7 +219,6 @@ func main() {
 	targetAddr := flag.String("target", "localhost:10011", "Endereço do TeamSpeak ServerQuery")
 	maxConns := flag.Int("max-conns", 100, "Máximo de conexões simultâneas")
 	timeout := flag.Duration("timeout", 30*time.Second, "Timeout de conexão")
-	rateLimit := flag.Int("rate-limit", 100, "Máximo de conexões por segundo por IP")
 	logLevel := flag.String("log", "info", "Nível de log (debug, info, warn, error)")
 	showVersion := flag.Bool("version", false, "Mostra versão e sai")
 
@@ -316,7 +239,6 @@ func main() {
 		TargetAddr: *targetAddr,
 		MaxConns:   *maxConns,
 		Timeout:    *timeout,
-		RateLimit:  *rateLimit,
 		LogLevel:   *logLevel,
 	}
 
