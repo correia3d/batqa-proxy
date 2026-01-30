@@ -47,14 +47,23 @@ if command -v go &> /dev/null; then
     echo -e "${GREEN}✅ Go encontrado, compilando...${NC}"
     go build -o $BINARY_NAME main.go
 else
-    echo -e "${YELLOW}⚠️  Go não encontrado.${NC}"
-    echo -e "${YELLOW}   Baixe o binário pré-compilado ou instale Go 1.21+${NC}"
+    echo -e "${YELLOW}⚠️  Go não encontrado, baixando binário...${NC}"
     
     if [ -f "$BINARY_NAME" ]; then
         echo -e "${GREEN}✅ Binário encontrado no diretório atual${NC}"
     else
-        echo -e "${RED}❌ Binário não encontrado. Compile com: go build -o batqa-proxy main.go${NC}"
-        exit 1
+        # Baixar binário pré-compilado
+        echo -e "${YELLOW}📥 Baixando binário pré-compilado...${NC}"
+        curl -L -o $BINARY_NAME "https://raw.githubusercontent.com/correia3d/batqa-proxy/main/batqa-proxy-linux-amd64"
+        
+        if [ ! -f "$BINARY_NAME" ] || file $BINARY_NAME | grep -q "HTML"; then
+            echo -e "${RED}❌ Falha ao baixar binário. Instale Go 1.21+ e compile manualmente.${NC}"
+            rm -f $BINARY_NAME 2>/dev/null
+            exit 1
+        fi
+        
+        chmod +x $BINARY_NAME
+        echo -e "${GREEN}✅ Binário baixado com sucesso${NC}"
     fi
 fi
 

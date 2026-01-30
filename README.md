@@ -70,12 +70,14 @@ Total: ~200ms para 100 comandos (em vez de 20 segundos!)
 ### Download e Instalação
 
 ```bash
-# Baixar binário
-wget https://github.com/correia3d/batqa-proxy/releases/latest/download/batqa-proxy-linux-amd64
+# Baixar binário pré-compilado
+wget https://raw.githubusercontent.com/correia3d/batqa-proxy/main/batqa-proxy-linux-amd64
 chmod +x batqa-proxy-linux-amd64
 sudo mv batqa-proxy-linux-amd64 /usr/local/bin/batqa-proxy
 
 # Ou compilar do fonte (requer Go 1.21+)
+git clone https://github.com/correia3d/batqa-proxy.git
+cd batqa-proxy
 go build -o batqa-proxy main.go
 ```
 
