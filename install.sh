@@ -68,14 +68,14 @@ TS_PORT="10011"
 if netstat -tlnp 2>/dev/null | grep -q ":10101"; then
     echo -e "${YELLOW}📍 TeaSpeak detectado (porta 10101)${NC}"
     TS_PORT="10101"
-    PROXY_PORT="10102"
+    PROXY_PORT="10203"
 elif netstat -tlnp 2>/dev/null | grep -q ":10011"; then
     echo -e "${YELLOW}📍 TeamSpeak detectado (porta 10011)${NC}"
     TS_PORT="10011"
-    PROXY_PORT="10012"
+    PROXY_PORT="10202"
 else
     echo -e "${YELLOW}⚠️  Nenhum servidor detectado, usando padrão (10011)${NC}"
-    PROXY_PORT="10012"
+    PROXY_PORT="10202"
 fi
 
 # Pergunta configurações

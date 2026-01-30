@@ -86,17 +86,17 @@ go build -o batqa-proxy main.go
 ./batqa-proxy
 
 # Com opções
-./batqa-proxy -listen :10012 -target localhost:10011
+./batqa-proxy -listen :10202 -target localhost:10011
 
 # TeaSpeak (porta diferente)
-./batqa-proxy -listen :10102 -target localhost:10101
+./batqa-proxy -listen :10203 -target localhost:10101
 ```
 
 ### Parâmetros
 
 | Parâmetro | Padrão | Descrição |
 |-----------|--------|-----------|
-| `-listen` | `:10012` | Porta que o proxy escuta |
+| `-listen` | `:10202` | Porta que o proxy escuta |
 | `-target` | `localhost:10011` | Endereço do ServerQuery |
 | `-max-conns` | `100` | Máximo de conexões simultâneas |
 | `-timeout` | `30s` | Timeout de conexão |
@@ -116,7 +116,7 @@ After=network.target teamspeak3-server.service
 Type=simple
 User=teamspeak
 Group=teamspeak
-ExecStart=/usr/local/bin/batqa-proxy -listen :10012 -target localhost:10011
+ExecStart=/usr/local/bin/batqa-proxy -listen :10202 -target localhost:10011
 Restart=always
 RestartSec=5
 
@@ -137,10 +137,10 @@ sudo systemctl status batqa-proxy
 
 ```bash
 # Liberar porta no firewall
-sudo ufw allow 10012/tcp
+sudo ufw allow 10202/tcp
 
 # Ou com iptables
-sudo iptables -A INPUT -p tcp --dport 10012 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 10202 -j ACCEPT
 ```
 
 ## 🔒 Segurança
@@ -170,7 +170,7 @@ No BATQA, ao adicionar/editar um servidor:
 
 ```
 Host: seu-servidor.com
-Porta: 10012          ← Porta do proxy (em vez de 10011)
+Porta: 10202          ← Porta do proxy (em vez de 10011)
 Usuário: serveradmin
 Senha: sua-senha
 ```

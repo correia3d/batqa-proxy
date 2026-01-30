@@ -3,7 +3,7 @@
 // Acelera comandos executando-os localmente no servidor, eliminando
 // latência de rede entre o proxy e o TeamSpeak.
 //
-// Uso: ./batqa-proxy -listen :10012 -target localhost:10011
+// Uso: ./batqa-proxy -listen :10202 -target localhost:10011
 //
 // Build: go build -o batqa-proxy main.go
 // Build Linux (cross-compile): GOOS=linux GOARCH=amd64 go build -o batqa-proxy-linux-amd64 main.go
@@ -291,7 +291,7 @@ func (p *Proxy) PrintStats() {
 
 func main() {
 	// Flags de linha de comando
-	listenAddr := flag.String("listen", ":10012", "Endereço para escutar (ex: :10012)")
+	listenAddr := flag.String("listen", ":10202", "Endereço para escutar (ex: :10202)")
 	targetAddr := flag.String("target", "localhost:10011", "Endereço do TeamSpeak ServerQuery")
 	maxConns := flag.Int("max-conns", 100, "Máximo de conexões simultâneas")
 	timeout := flag.Duration("timeout", 30*time.Second, "Timeout de conexão")
